@@ -15,7 +15,9 @@
     <div class="shape s7"></div><div class="shape s8"></div>
   </div>
 
-  <!-- ── HOME ── -->
+  <!-- ══════════════════════════════════════════════════════════════════════
+       HOME
+       ══════════════════════════════════════════════════════════════════════ -->
   <div id="screen-home" class="screen active">
     <div class="logo-wrap">
       <div class="logo-icon">⚡</div>
@@ -23,39 +25,59 @@
       <p class="logo-tagline">The ultimate quiz challenge!</p>
     </div>
     <div class="home-actions">
-      <button class="btn-primary pulse" onclick="game.startNameEntry()">▶ Play</button>
+      <button class="btn-primary pulse" onclick="game.showSelectScreen()">▶ Play</button>
+      <button class="btn-secondary" onclick="admin.showDashboard()">🛠️ Manage Games</button>
+      <button class="btn-secondary" onclick="admin.showHistory()">📊 History</button>
     </div>
     <button class="mute-btn" id="mute-btn" onclick="game.toggleMute()" title="Toggle music">🔊</button>
   </div>
 
-  <!-- ── NAME ENTRY ── -->
+  <!-- ══════════════════════════════════════════════════════════════════════
+       GAME SELECT (pick a game to play)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-select" class="screen">
+    <div class="admin-topbar">
+      <button class="btn-ghost" onclick="game.showScreen('home')">← Back</button>
+      <h2>Choose a Game</h2>
+      <span></span>
+    </div>
+    <div class="select-games" id="select-games"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       NAME ENTRY
+       ══════════════════════════════════════════════════════════════════════ -->
   <div id="screen-name" class="screen">
     <div class="card">
       <h2>Enter Your Nickname</h2>
       <input type="text" id="player-name" class="name-input" placeholder="Your name..." maxlength="20" autocomplete="off" />
       <button class="btn-primary" onclick="game.joinGame()">Join Game →</button>
-      <button class="btn-ghost" onclick="game.showScreen('home')">← Back</button>
+      <button class="btn-ghost" onclick="game.showSelectScreen()">← Back</button>
     </div>
   </div>
 
-  <!-- ── LOBBY ── -->
+  <!-- ══════════════════════════════════════════════════════════════════════
+       LOBBY
+       ══════════════════════════════════════════════════════════════════════ -->
   <div id="screen-lobby" class="screen">
     <div class="lobby-header">
       <div class="game-pin-box">
         <span class="pin-label">GAME PIN</span>
         <span class="pin-number" id="game-pin">847 293</span>
       </div>
-      <div class="lobby-subtitle">Waiting for players…</div>
+      <div class="lobby-subtitle" id="lobby-game-name">Waiting for players…</div>
     </div>
     <div class="lobby-players" id="lobby-players"></div>
     <div class="lobby-footer">
       <div class="player-count" id="player-count">1 player joined</div>
       <button class="btn-primary" id="start-btn" onclick="game.startGame()">Start! 🚀</button>
     </div>
-    <button class="mute-btn" id="mute-btn-lobby" onclick="game.toggleMute()" title="Toggle music">🔊</button>
+    <button class="mute-btn" onclick="game.toggleMute()" title="Toggle music">🔊</button>
   </div>
 
-  <!-- ── COUNTDOWN ── -->
+  <!-- ══════════════════════════════════════════════════════════════════════
+       COUNTDOWN 3-2-1
+       ══════════════════════════════════════════════════════════════════════ -->
   <div id="screen-countdown" class="screen">
     <div class="countdown-wrap">
       <div class="countdown-label">Get ready!</div>
@@ -63,16 +85,15 @@
     </div>
   </div>
 
-  <!-- ── QUESTION ── -->
+  <!-- ══════════════════════════════════════════════════════════════════════
+       QUESTION
+       ══════════════════════════════════════════════════════════════════════ -->
   <div id="screen-question" class="screen">
-    <!-- Header bar -->
     <div class="q-header">
       <div class="q-meta-left">
         <span class="q-num" id="q-num">Q1/10</span>
         <span class="q-cat" id="q-cat">Science 🔬</span>
       </div>
-
-      <!-- Timer circle -->
       <div class="timer-wrap">
         <svg class="timer-svg" viewBox="0 0 120 120">
           <circle class="timer-track" cx="60" cy="60" r="52" />
@@ -80,28 +101,22 @@
         </svg>
         <div class="timer-num" id="timer-num">20</div>
       </div>
-
       <div class="q-meta-right">
         <span class="q-pts" id="q-pts">1000 pts</span>
         <span class="q-answered" id="q-answered">0 answered</span>
       </div>
     </div>
-
-    <!-- Question text -->
     <div class="question-box">
       <p class="question-text" id="question-text">Loading…</p>
     </div>
-
-    <!-- Answer grid -->
     <div class="answers-grid" id="answers-grid"></div>
-
-    <!-- Streak badge -->
     <div class="streak-badge hidden" id="streak-badge">🔥 <span id="streak-count">2</span> streak!</div>
-
     <button class="mute-btn" onclick="game.toggleMute()">🔊</button>
   </div>
 
-  <!-- ── ANSWER RESULT ── -->
+  <!-- ══════════════════════════════════════════════════════════════════════
+       ANSWER RESULT
+       ══════════════════════════════════════════════════════════════════════ -->
   <div id="screen-result" class="screen">
     <div class="result-wrap">
       <div class="result-icon" id="result-icon">✓</div>
@@ -115,7 +130,9 @@
     </div>
   </div>
 
-  <!-- ── SCOREBOARD ── -->
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCOREBOARD
+       ══════════════════════════════════════════════════════════════════════ -->
   <div id="screen-scoreboard" class="screen">
     <div class="scoreboard-header">
       <h2>📊 Scoreboard</h2>
@@ -124,7 +141,9 @@
     <div class="scoreboard-list" id="scoreboard-list"></div>
   </div>
 
-  <!-- ── WINNER ── -->
+  <!-- ══════════════════════════════════════════════════════════════════════
+       WINNER
+       ══════════════════════════════════════════════════════════════════════ -->
   <div id="screen-winner" class="screen">
     <canvas id="confetti-canvas"></canvas>
     <div class="winner-content">
@@ -138,8 +157,143 @@
     </div>
   </div>
 
-  <script src="js/questions.js"></script>
+  <!-- ══════════════════════════════════════════════════════════════════════
+       DASHBOARD (manage games)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-dashboard" class="screen">
+    <div class="admin-topbar">
+      <button class="btn-ghost" onclick="game.showScreen('home')">← Home</button>
+      <h2>🛠️ Game Manager</h2>
+      <button class="btn-primary btn-sm" onclick="admin.showCreateForm()">+ New Game</button>
+    </div>
+    <div class="games-grid" id="games-grid"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       GAME EDITOR
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-editor" class="screen">
+    <div class="admin-topbar">
+      <button class="btn-ghost" onclick="admin.showDashboard()">← Dashboard</button>
+      <h2 id="editor-title">Create New Game</h2>
+      <span></span>
+    </div>
+
+    <div class="editor-body">
+      <!-- Game details -->
+      <div class="editor-section">
+        <h3>Game Details</h3>
+        <div class="form-group">
+          <label>Name</label>
+          <input id="game-name-input" class="form-input" placeholder="e.g. Science Quiz" maxlength="80" />
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="game-desc-input" class="form-input" rows="2" placeholder="A fun quiz about…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="game-status-select" class="form-input">
+            <option value="draft">Draft</option>
+            <option value="active">Active (visible to players)</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary btn-sm" onclick="admin.saveGame()">💾 Save Game</button>
+          <button class="btn-sm btn-del hidden" id="delete-game-btn" onclick="admin.deleteGame(admin._currentGameId, '')">🗑️ Delete Game</button>
+        </div>
+      </div>
+
+      <!-- Questions -->
+      <div class="editor-section hidden" id="editor-questions-section">
+        <div class="section-header">
+          <h3>Questions</h3>
+          <button class="btn-primary btn-sm" onclick="admin.showAddQuestion()">+ Add Question</button>
+        </div>
+        <div id="editor-questions-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Question modal ── -->
+  <div class="modal-overlay hidden" id="question-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="qmodal-title">Add Question</h3>
+        <button class="btn-icon" onclick="admin.closeQuestionModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type</label>
+            <select id="qm-type" class="form-input" onchange="admin._toggleTFMode(this.value)">
+              <option value="quiz">Quiz (4 options)</option>
+              <option value="true_false">True / False</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <input id="qm-category" class="form-input" placeholder="e.g. Science" />
+          </div>
+          <div class="form-group" style="max-width:80px">
+            <label>Emoji</label>
+            <input id="qm-emoji" class="form-input" value="❓" maxlength="4" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Question</label>
+          <textarea id="qm-question" class="form-input" rows="2" placeholder="What is…?"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Answer 1</label><input id="qm-ans1" class="form-input ans-inp ans-inp-red" placeholder="Answer 1" /></div>
+          <div class="form-group"><label>Answer 2</label><input id="qm-ans2" class="form-input ans-inp ans-inp-blue" placeholder="Answer 2" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Answer 3</label><input id="qm-ans3" class="form-input ans-inp ans-inp-yellow" placeholder="Answer 3" /></div>
+          <div class="form-group"><label>Answer 4</label><input id="qm-ans4" class="form-input ans-inp ans-inp-green" placeholder="Answer 4" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Correct Answer</label>
+            <select id="qm-correct" class="form-input">
+              <option value="0">Answer 1</option><option value="1">Answer 2</option>
+              <option value="2">Answer 3</option><option value="3">Answer 4</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Time (seconds)</label>
+            <select id="qm-time" class="form-input">
+              <option value="10">10s</option><option value="15">15s</option>
+              <option value="20" selected>20s</option><option value="25">25s</option>
+              <option value="30">30s</option><option value="45">45s</option>
+              <option value="60">60s</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="admin.closeQuestionModal()">Cancel</button>
+        <button class="btn-primary btn-sm" onclick="admin.saveQuestion()">💾 Save Question</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       HISTORY
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-history" class="screen">
+    <div class="admin-topbar">
+      <button class="btn-ghost" onclick="game.showScreen('home')">← Home</button>
+      <h2>📊 Game History</h2>
+      <span></span>
+    </div>
+    <div class="history-list" id="history-list"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
   <script src="js/audio.js"></script>
+  <script src="js/admin.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>

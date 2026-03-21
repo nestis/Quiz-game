@@ -1,0 +1,21 @@
+{
+  "name": "quizblitz",
+  "version": "1.0.0",
+  "description": "Kahoot-style quiz game with AWS deployment",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "seed": "node server/seed.js",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "cdk:deploy": "cd infra && npx cdk deploy --all",
+    "cdk:synth": "cd infra && npx cdk synth"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.500.0",
+    "@aws-sdk/lib-dynamodb": "^3.500.0",
+    "express": "^4.18.2",
+    "uuid": "^9.0.0"
+  }
+}

@@ -1,0 +1,106 @@
+/**
+ * QuizBlitz API client
+ */
+const API = {
+  // ── Games ─────────────────────────────────────────────────────────
+  async getGames() {
+    const r = await fetch('/api/games');
+    return r.json();
+  },
+
+  async getGame(id) {
+    const r = await fetch(`/api/games/${id}`);
+    return r.json();
+  },
+
+  async createGame(name, description) {
+    const r = await fetch('/api/games', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description }),
+    });
+    return r.json();
+  },
+
+  async updateGame(id, data) {
+    const r = await fetch(`/api/games/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return r.json();
+  },
+
+  async deleteGame(id) {
+    const r = await fetch(`/api/games/${id}`, { method: 'DELETE' });
+    return r.json();
+  },
+
+  // ── Questions ─────────────────────────────────────────────────────
+  async getQuestions(gameId) {
+    const r = await fetch(`/api/games/${gameId}/questions`);
+    return r.json();
+  },
+
+  async addQuestion(gameId, question) {
+    const r = await fetch(`/api/games/${gameId}/questions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(question),
+    });
+    return r.json();
+  },
+
+  async updateQuestion(gameId, questionId, data) {
+    const r = await fetch(`/api/games/${gameId}/questions/${questionId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return r.json();
+  },
+
+  async deleteQuestion(gameId, questionId) {
+    const r = await fetch(`/api/games/${gameId}/questions/${questionId}`, { method: 'DELETE' });
+    return r.json();
+  },
+
+  // ── Sessions ──────────────────────────────────────────────────────
+  async createSession(gameId) {
+    const r = await fetch('/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gameId }),
+    });
+    return r.json();
+  },
+
+  async getSessions() {
+    const r = await fetch('/api/sessions');
+    return r.json();
+  },
+
+  async getSessionsByGame(gameId) {
+    const r = await fetch(`/api/sessions/game/${gameId}`);
+    return r.json();
+  },
+
+  async getSession(id) {
+    const r = await fetch(`/api/sessions/${id}`);
+    return r.json();
+  },
+
+  async getPlayers(sessionId) {
+    const r = await fetch(`/api/sessions/${sessionId}/players`);
+    return r.json();
+  },
+
+  async finishSession(sessionId, players) {
+    const r = await fetch(`/api/sessions/${sessionId}/finish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ players }),
+    });
+    return r.json();
+  },
+};

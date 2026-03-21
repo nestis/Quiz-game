@@ -1,0 +1,6 @@
+node_modules/
+.env
+cdk.out/
+*.js.map
+.DS_Store
+docker-data/

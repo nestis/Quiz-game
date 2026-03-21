@@ -219,8 +219,8 @@ class Admin {
   }
 
   // ── PLAY GAME (from dashboard) ──────────────────────────────────────────
-  async playGame(gameId) {
-    game.selectGame(gameId);
+  playGame(gameId) {
+    mp.beginHostFlow(gameId);
   }
 
   // ── HISTORY ─────────────────────────────────────────────────────────────

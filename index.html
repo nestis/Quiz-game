@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QuizBlitz – Kahoot-style Quiz Game</title>
+  <title>QuizBlitz – Multiplayer Quiz Game</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -15,69 +15,102 @@
     <div class="shape s7"></div><div class="shape s8"></div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════════
        HOME
-       ══════════════════════════════════════════════════════════════════════ -->
+       ══════════════════════════════════════════════════════════════ -->
   <div id="screen-home" class="screen active">
     <div class="logo-wrap">
       <div class="logo-icon">⚡</div>
       <h1 class="logo-title">QuizBlitz</h1>
-      <p class="logo-tagline">The ultimate quiz challenge!</p>
+      <p class="logo-tagline">Real-time multiplayer quiz!</p>
     </div>
     <div class="home-actions">
-      <button class="btn-primary pulse" onclick="game.showSelectScreen()">▶ Play</button>
+      <button class="btn-primary pulse" onclick="game.showSelectScreen()">🎮 Host a Game</button>
+      <button class="btn-secondary" onclick="mp.goToJoin()">🌐 Join with PIN</button>
       <button class="btn-secondary" onclick="admin.showDashboard()">🛠️ Manage Games</button>
       <button class="btn-secondary" onclick="admin.showHistory()">📊 History</button>
     </div>
     <button class="mute-btn" id="mute-btn" onclick="game.toggleMute()" title="Toggle music">🔊</button>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       GAME SELECT (pick a game to play)
-       ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ══════════════════════════════════════════════════════════════
+       JOIN GAME (players entering a PIN)
+       ══════════════════════════════════════════════════════════════ -->
+  <div id="screen-join" class="screen">
+    <div class="card">
+      <h2>Join a Game</h2>
+      <div class="form-group" style="width:100%">
+        <label>Game PIN</label>
+        <input id="join-pin" class="name-input" placeholder="e.g. 847 293"
+               maxlength="8" autocomplete="off" inputmode="numeric"
+               onkeydown="if(event.key==='Enter') document.getElementById('join-name').focus()" />
+      </div>
+      <div class="form-group" style="width:100%">
+        <label>Your Nickname</label>
+        <input id="join-name" class="name-input" placeholder="Your name…"
+               maxlength="20" autocomplete="off"
+               onkeydown="if(event.key==='Enter') mp.playerJoin()" />
+      </div>
+      <button class="btn-primary" onclick="mp.playerJoin()">Join →</button>
+      <button class="btn-ghost"   onclick="game.showScreen('home')">← Back</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       HOST NAME (admin enters their name before creating session)
+       ══════════════════════════════════════════════════════════════ -->
+  <div id="screen-name" class="screen">
+    <div class="card">
+      <h2 id="name-screen-title">Your host name</h2>
+      <input type="text" id="player-name" class="name-input"
+             placeholder="Your name…" maxlength="20" autocomplete="off"
+             onkeydown="if(event.key==='Enter') mp.startHostFlow()" />
+      <button class="btn-primary" onclick="mp.startHostFlow()">Create Game →</button>
+      <button class="btn-ghost"   onclick="game.showScreen('select')">← Back</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       GAME SELECT (host picks a quiz)
+       ══════════════════════════════════════════════════════════════ -->
   <div id="screen-select" class="screen">
     <div class="admin-topbar">
       <button class="btn-ghost" onclick="game.showScreen('home')">← Back</button>
-      <h2>Choose a Game</h2>
+      <h2>Choose a Game to Host</h2>
       <span></span>
     </div>
     <div class="select-games" id="select-games"></div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       NAME ENTRY
-       ══════════════════════════════════════════════════════════════════════ -->
-  <div id="screen-name" class="screen">
-    <div class="card">
-      <h2>Enter Your Nickname</h2>
-      <input type="text" id="player-name" class="name-input" placeholder="Your name..." maxlength="20" autocomplete="off" />
-      <button class="btn-primary" onclick="game.joinGame()">Join Game →</button>
-      <button class="btn-ghost" onclick="game.showSelectScreen()">← Back</button>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════════
        LOBBY
-       ══════════════════════════════════════════════════════════════════════ -->
+       ══════════════════════════════════════════════════════════════ -->
   <div id="screen-lobby" class="screen">
     <div class="lobby-header">
       <div class="game-pin-box">
         <span class="pin-label">GAME PIN</span>
-        <span class="pin-number" id="game-pin">847 293</span>
+        <span class="pin-number" id="game-pin">000 000</span>
       </div>
-      <div class="lobby-subtitle" id="lobby-game-name">Waiting for players…</div>
+      <div class="lobby-subtitle" id="lobby-game-name"></div>
     </div>
+
     <div class="lobby-players" id="lobby-players"></div>
+
     <div class="lobby-footer">
-      <div class="player-count" id="player-count">1 player joined</div>
-      <button class="btn-primary" id="start-btn" onclick="game.startGame()">Start! 🚀</button>
+      <div class="player-count" id="player-count">0 players joined</div>
+      <!-- waiting message shown to non-admin -->
+      <p id="lobby-waiting-msg" class="lobby-waiting" style="display:none">
+        Waiting for the host to start…
+      </p>
+      <!-- start button shown only to admin (onclick set dynamically by mp._showLobby) -->
+      <button class="btn-primary" id="start-btn" style="display:none">Start! 🚀</button>
     </div>
-    <button class="mute-btn" onclick="game.toggleMute()" title="Toggle music">🔊</button>
+    <button class="mute-btn" onclick="game.toggleMute()">🔊</button>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════════
        COUNTDOWN 3-2-1
-       ══════════════════════════════════════════════════════════════════════ -->
+       ══════════════════════════════════════════════════════════════ -->
   <div id="screen-countdown" class="screen">
     <div class="countdown-wrap">
       <div class="countdown-label">Get ready!</div>
@@ -85,27 +118,31 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════════
        QUESTION
-       ══════════════════════════════════════════════════════════════════════ -->
+       ══════════════════════════════════════════════════════════════ -->
   <div id="screen-question" class="screen">
     <div class="q-header">
       <div class="q-meta-left">
         <span class="q-num" id="q-num">Q1/10</span>
-        <span class="q-cat" id="q-cat">Science 🔬</span>
+        <span class="q-cat" id="q-cat">Category</span>
       </div>
       <div class="timer-wrap">
         <svg class="timer-svg" viewBox="0 0 120 120">
           <circle class="timer-track" cx="60" cy="60" r="52" />
-          <circle class="timer-ring" id="timer-ring" cx="60" cy="60" r="52" />
+          <circle class="timer-ring"  id="timer-ring" cx="60" cy="60" r="52" />
         </svg>
         <div class="timer-num" id="timer-num">20</div>
       </div>
       <div class="q-meta-right">
-        <span class="q-pts" id="q-pts">1000 pts</span>
-        <span class="q-answered" id="q-answered">0 answered</span>
+        <span class="q-pts"      id="q-pts">1000 pts</span>
+        <span class="q-answered" id="q-answered"></span>
       </div>
     </div>
+
+    <!-- Admin-only: live answer count badge -->
+    <div id="admin-answer-count" class="admin-answer-badge hidden"></div>
+
     <div class="question-box">
       <p class="question-text" id="question-text">Loading…</p>
     </div>
@@ -114,13 +151,13 @@
     <button class="mute-btn" onclick="game.toggleMute()">🔊</button>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════════
        ANSWER RESULT
-       ══════════════════════════════════════════════════════════════════════ -->
+       ══════════════════════════════════════════════════════════════ -->
   <div id="screen-result" class="screen">
     <div class="result-wrap">
-      <div class="result-icon" id="result-icon">✓</div>
-      <div class="result-label" id="result-label">Correct!</div>
+      <div class="result-icon"   id="result-icon">✓</div>
+      <div class="result-label"  id="result-label">Correct!</div>
       <div class="result-points" id="result-points">+1000</div>
       <div class="result-streak" id="result-streak"></div>
       <div class="correct-answer-box">
@@ -130,36 +167,51 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════════
        SCOREBOARD
-       ══════════════════════════════════════════════════════════════════════ -->
+       ══════════════════════════════════════════════════════════════ -->
   <div id="screen-scoreboard" class="screen">
     <div class="scoreboard-header">
       <h2>📊 Scoreboard</h2>
-      <div class="scoreboard-next">Next question in <span id="next-timer">5</span>s</div>
+      <!-- hidden in multiplayer; shown only for local mode -->
+      <div class="scoreboard-next" id="scoreboard-next">
+        Next question in <span id="next-timer">5</span>s
+      </div>
     </div>
     <div class="scoreboard-list" id="scoreboard-list"></div>
+
+    <!-- Player: waiting message -->
+    <p id="scoreboard-waiting" class="scoreboard-waiting-msg" style="display:none">
+      Waiting for the host…
+    </p>
+
+    <!-- Admin: next/end controls -->
+    <div id="admin-next-controls" class="admin-next-bar hidden">
+      <button id="admin-next-btn" class="btn-primary btn-sm" onclick="mp.adminNextOrEnd()">
+        Next Question →
+      </button>
+    </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════════
        WINNER
-       ══════════════════════════════════════════════════════════════════════ -->
+       ══════════════════════════════════════════════════════════════ -->
   <div id="screen-winner" class="screen">
     <canvas id="confetti-canvas"></canvas>
     <div class="winner-content">
       <h1 class="winner-title">🏆 Game Over!</h1>
-      <div class="podium-row" id="podium-row"></div>
+      <div class="podium-row"  id="podium-row"></div>
       <div class="final-table">
         <h3>Final Standings</h3>
         <div id="final-list"></div>
       </div>
-      <button class="btn-primary" onclick="game.restart()">🔄 Play Again</button>
+      <button class="btn-primary" onclick="mp.goHome()">🏠 Home</button>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════════
        DASHBOARD (manage games)
-       ══════════════════════════════════════════════════════════════════════ -->
+       ══════════════════════════════════════════════════════════════ -->
   <div id="screen-dashboard" class="screen">
     <div class="admin-topbar">
       <button class="btn-ghost" onclick="game.showScreen('home')">← Home</button>
@@ -169,18 +221,16 @@
     <div class="games-grid" id="games-grid"></div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════════
        GAME EDITOR
-       ══════════════════════════════════════════════════════════════════════ -->
+       ══════════════════════════════════════════════════════════════ -->
   <div id="screen-editor" class="screen">
     <div class="admin-topbar">
       <button class="btn-ghost" onclick="admin.showDashboard()">← Dashboard</button>
       <h2 id="editor-title">Create New Game</h2>
       <span></span>
     </div>
-
     <div class="editor-body">
-      <!-- Game details -->
       <div class="editor-section">
         <h3>Game Details</h3>
         <div class="form-group">
@@ -195,16 +245,15 @@
           <label>Status</label>
           <select id="game-status-select" class="form-input">
             <option value="draft">Draft</option>
-            <option value="active">Active (visible to players)</option>
+            <option value="active">Active (visible to hosts)</option>
           </select>
         </div>
         <div class="form-actions">
           <button class="btn-primary btn-sm" onclick="admin.saveGame()">💾 Save Game</button>
-          <button class="btn-sm btn-del hidden" id="delete-game-btn" onclick="admin.deleteGame(admin._currentGameId, '')">🗑️ Delete Game</button>
+          <button class="btn-sm btn-del hidden" id="delete-game-btn"
+                  onclick="admin.deleteGame(admin._currentGameId,'')">🗑️ Delete Game</button>
         </div>
       </div>
-
-      <!-- Questions -->
       <div class="editor-section hidden" id="editor-questions-section">
         <div class="section-header">
           <h3>Questions</h3>
@@ -215,7 +264,7 @@
     </div>
   </div>
 
-  <!-- ── Question modal ── -->
+  <!-- Question modal -->
   <div class="modal-overlay hidden" id="question-modal">
     <div class="modal-box">
       <div class="modal-header">
@@ -245,12 +294,12 @@
           <textarea id="qm-question" class="form-input" rows="2" placeholder="What is…?"></textarea>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Answer 1</label><input id="qm-ans1" class="form-input ans-inp ans-inp-red" placeholder="Answer 1" /></div>
-          <div class="form-group"><label>Answer 2</label><input id="qm-ans2" class="form-input ans-inp ans-inp-blue" placeholder="Answer 2" /></div>
+          <div class="form-group"><label>Answer 1</label><input id="qm-ans1" class="form-input ans-inp ans-inp-red"    placeholder="Answer 1" /></div>
+          <div class="form-group"><label>Answer 2</label><input id="qm-ans2" class="form-input ans-inp ans-inp-blue"   placeholder="Answer 2" /></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Answer 3</label><input id="qm-ans3" class="form-input ans-inp ans-inp-yellow" placeholder="Answer 3" /></div>
-          <div class="form-group"><label>Answer 4</label><input id="qm-ans4" class="form-input ans-inp ans-inp-green" placeholder="Answer 4" /></div>
+          <div class="form-group"><label>Answer 4</label><input id="qm-ans4" class="form-input ans-inp ans-inp-green"  placeholder="Answer 4" /></div>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -265,8 +314,7 @@
             <select id="qm-time" class="form-input">
               <option value="10">10s</option><option value="15">15s</option>
               <option value="20" selected>20s</option><option value="25">25s</option>
-              <option value="30">30s</option><option value="45">45s</option>
-              <option value="60">60s</option>
+              <option value="30">30s</option><option value="45">45s</option><option value="60">60s</option>
             </select>
           </div>
         </div>
@@ -278,9 +326,9 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════════
        HISTORY
-       ══════════════════════════════════════════════════════════════════════ -->
+       ══════════════════════════════════════════════════════════════ -->
   <div id="screen-history" class="screen">
     <div class="admin-topbar">
       <button class="btn-ghost" onclick="game.showScreen('home')">← Home</button>
@@ -290,10 +338,12 @@
     <div class="history-list" id="history-list"></div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Socket.io client (served automatically by the server) -->
+  <script src="/socket.io/socket.io.js"></script>
   <script src="js/api.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/admin.js"></script>
+  <script src="js/multiplayer.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>

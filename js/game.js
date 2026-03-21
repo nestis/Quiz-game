@@ -77,7 +77,7 @@ class QuizGame {
     }
 
     _$('select-games').innerHTML = active.map(g => `
-      <div class="select-card" onclick="game.selectGame('${g.id}')">
+      <div class="select-card" onclick="mp.beginHostFlow('${g.id}')">
         <h3>${escHtml(g.name)}</h3>
         <p>${escHtml(g.description || '')}</p>
         <div class="select-card-meta">
@@ -85,15 +85,6 @@ class QuizGame {
           <span>🎮 Played ${g.timesPlayed || 0}×</span>
         </div>
       </div>`).join('');
-  }
-
-  async selectGame(gameId) {
-    this._selectedGameId = gameId;
-    this.audio.init();
-    this.audio.resume();
-    if (!this.audio.muted) this.audio.playLobbyMusic();
-    this.showScreen('name');
-    setTimeout(() => _$('player-name').focus(), 120);
   }
 
   // ── NAME + LOBBY ───────────────────────────────────────────────────────

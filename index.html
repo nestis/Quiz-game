@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuizBlitz – Kahoot-style Quiz Game</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Floating background shapes -->
+  <div class="bg-shapes" aria-hidden="true">
+    <div class="shape s1"></div><div class="shape s2"></div><div class="shape s3"></div>
+    <div class="shape s4"></div><div class="shape s5"></div><div class="shape s6"></div>
+    <div class="shape s7"></div><div class="shape s8"></div>
+  </div>
+
+  <!-- ── HOME ── -->
+  <div id="screen-home" class="screen active">
+    <div class="logo-wrap">
+      <div class="logo-icon">⚡</div>
+      <h1 class="logo-title">QuizBlitz</h1>
+      <p class="logo-tagline">The ultimate quiz challenge!</p>
+    </div>
+    <div class="home-actions">
+      <button class="btn-primary pulse" onclick="game.startNameEntry()">▶ Play</button>
+    </div>
+    <button class="mute-btn" id="mute-btn" onclick="game.toggleMute()" title="Toggle music">🔊</button>
+  </div>
+
+  <!-- ── NAME ENTRY ── -->
+  <div id="screen-name" class="screen">
+    <div class="card">
+      <h2>Enter Your Nickname</h2>
+      <input type="text" id="player-name" class="name-input" placeholder="Your name..." maxlength="20" autocomplete="off" />
+      <button class="btn-primary" onclick="game.joinGame()">Join Game →</button>
+      <button class="btn-ghost" onclick="game.showScreen('home')">← Back</button>
+    </div>
+  </div>
+
+  <!-- ── LOBBY ── -->
+  <div id="screen-lobby" class="screen">
+    <div class="lobby-header">
+      <div class="game-pin-box">
+        <span class="pin-label">GAME PIN</span>
+        <span class="pin-number" id="game-pin">847 293</span>
+      </div>
+      <div class="lobby-subtitle">Waiting for players…</div>
+    </div>
+    <div class="lobby-players" id="lobby-players"></div>
+    <div class="lobby-footer">
+      <div class="player-count" id="player-count">1 player joined</div>
+      <button class="btn-primary" id="start-btn" onclick="game.startGame()">Start! 🚀</button>
+    </div>
+    <button class="mute-btn" id="mute-btn-lobby" onclick="game.toggleMute()" title="Toggle music">🔊</button>
+  </div>
+
+  <!-- ── COUNTDOWN ── -->
+  <div id="screen-countdown" class="screen">
+    <div class="countdown-wrap">
+      <div class="countdown-label">Get ready!</div>
+      <div class="countdown-number" id="countdown-number">3</div>
+    </div>
+  </div>
+
+  <!-- ── QUESTION ── -->
+  <div id="screen-question" class="screen">
+    <!-- Header bar -->
+    <div class="q-header">
+      <div class="q-meta-left">
+        <span class="q-num" id="q-num">Q1/10</span>
+        <span class="q-cat" id="q-cat">Science 🔬</span>
+      </div>
+
+      <!-- Timer circle -->
+      <div class="timer-wrap">
+        <svg class="timer-svg" viewBox="0 0 120 120">
+          <circle class="timer-track" cx="60" cy="60" r="52" />
+          <circle class="timer-ring" id="timer-ring" cx="60" cy="60" r="52" />
+        </svg>
+        <div class="timer-num" id="timer-num">20</div>
+      </div>
+
+      <div class="q-meta-right">
+        <span class="q-pts" id="q-pts">1000 pts</span>
+        <span class="q-answered" id="q-answered">0 answered</span>
+      </div>
+    </div>
+
+    <!-- Question text -->
+    <div class="question-box">
+      <p class="question-text" id="question-text">Loading…</p>
+    </div>
+
+    <!-- Answer grid -->
+    <div class="answers-grid" id="answers-grid"></div>
+
+    <!-- Streak badge -->
+    <div class="streak-badge hidden" id="streak-badge">🔥 <span id="streak-count">2</span> streak!</div>
+
+    <button class="mute-btn" onclick="game.toggleMute()">🔊</button>
+  </div>
+
+  <!-- ── ANSWER RESULT ── -->
+  <div id="screen-result" class="screen">
+    <div class="result-wrap">
+      <div class="result-icon" id="result-icon">✓</div>
+      <div class="result-label" id="result-label">Correct!</div>
+      <div class="result-points" id="result-points">+1000</div>
+      <div class="result-streak" id="result-streak"></div>
+      <div class="correct-answer-box">
+        <div class="correct-answer-title">✔ Correct answer</div>
+        <div class="correct-answer-text" id="correct-answer-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCOREBOARD ── -->
+  <div id="screen-scoreboard" class="screen">
+    <div class="scoreboard-header">
+      <h2>📊 Scoreboard</h2>
+      <div class="scoreboard-next">Next question in <span id="next-timer">5</span>s</div>
+    </div>
+    <div class="scoreboard-list" id="scoreboard-list"></div>
+  </div>
+
+  <!-- ── WINNER ── -->
+  <div id="screen-winner" class="screen">
+    <canvas id="confetti-canvas"></canvas>
+    <div class="winner-content">
+      <h1 class="winner-title">🏆 Game Over!</h1>
+      <div class="podium-row" id="podium-row"></div>
+      <div class="final-table">
+        <h3>Final Standings</h3>
+        <div id="final-list"></div>
+      </div>
+      <button class="btn-primary" onclick="game.restart()">🔄 Play Again</button>
+    </div>
+  </div>
+
+  <script src="js/questions.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

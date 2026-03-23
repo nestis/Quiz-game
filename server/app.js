@@ -4,6 +4,10 @@ const path    = require('path');
 function createApp() {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
+
+  // Health check – must respond before DynamoDB is available
+  app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+
   app.use(express.static(path.join(__dirname, '..')));
   app.use('/api/auth',     require('./routes/auth'));
   app.use('/api/games',    require('./routes/games'));

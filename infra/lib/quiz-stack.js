@@ -135,7 +135,7 @@ class QuizBlitzStack extends Stack {
       },
       healthCheckConfiguration: {
         protocol: 'HTTP',
-        path:     '/api/games',
+        path:     '/health',
         interval: 10,
         timeout:  5,
         healthyThreshold:   1,

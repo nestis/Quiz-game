@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { v4: uuid } = require('uuid');
 const { db, T, PutCommand, GetCommand, QueryCommand, ScanCommand, UpdateCommand } = require('../db');
+const { requireAdmin } = require('../middleware/auth');
 
 // Generate a 6-digit PIN not already in use
 async function generatePin() {
@@ -18,7 +19,7 @@ async function generatePin() {
 }
 
 // Create a session (start a game)
-router.post('/', async (req, res, next) => {
+router.post('/', requireAdmin, async (req, res, next) => {
   try {
     const { gameId } = req.body;
     if (!gameId) return res.status(400).json({ error: 'gameId is required' });

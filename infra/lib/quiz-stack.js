@@ -66,7 +66,18 @@ class QuizBlitzStack extends Stack {
       removalPolicy: RemovalPolicy.RETAIN,
     });
 
-    const tables = [gamesTable, questionsTable, sessionsTable, playersTable];
+    const usersTable = new dynamodb.Table(this, 'UsersTable', {
+      tableName: 'QuizBlitz_Users',
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+    usersTable.addGlobalSecondaryIndex({
+      indexName:    'username-index',
+      partitionKey: { name: 'username', type: dynamodb.AttributeType.STRING },
+    });
+
+    const tables = [gamesTable, questionsTable, sessionsTable, playersTable, usersTable];
 
     // ── Docker image (built from project root Dockerfile) ────────────
     const image = new assets.DockerImageAsset(this, 'QuizImage', {
@@ -107,6 +118,12 @@ class QuizBlitzStack extends Stack {
               { name: 'QUESTIONS_TABLE',  value: questionsTable.tableName  },
               { name: 'SESSIONS_TABLE',   value: sessionsTable.tableName   },
               { name: 'PLAYERS_TABLE',    value: playersTable.tableName    },
+              { name: 'USERS_TABLE',      value: usersTable.tableName      },
+              // JWT_SECRET and ADMIN_PASSWORD should be set as secrets in App Runner
+              // or overridden via AWS SSM; fallback values here are for reference only.
+              { name: 'JWT_SECRET',       value: process.env.JWT_SECRET    || 'CHANGE_ME_IN_PROD' },
+              { name: 'ADMIN_USERNAME',   value: process.env.ADMIN_USERNAME || 'admin'            },
+              { name: 'ADMIN_PASSWORD',   value: process.env.ADMIN_PASSWORD || 'CHANGE_ME_IN_PROD' },
             ],
           },
         },

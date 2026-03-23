@@ -19,6 +19,7 @@ const T = {
   QUESTIONS: process.env.QUESTIONS_TABLE || 'QuizBlitz_Questions',
   SESSIONS:  process.env.SESSIONS_TABLE  || 'QuizBlitz_Sessions',
   PLAYERS:   process.env.PLAYERS_TABLE   || 'QuizBlitz_Players',
+  USERS:     process.env.USERS_TABLE     || 'QuizBlitz_Users',
 };
 
 // ── Create tables for local DynamoDB ─────────────────────────────────────────
@@ -76,6 +77,19 @@ async function initDB() {
         { AttributeName: 'sessionId', AttributeType: 'S' },
         { AttributeName: 'id',        AttributeType: 'S' },
       ],
+    },
+    {
+      TableName: T.USERS,
+      KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
+      AttributeDefinitions: [
+        { AttributeName: 'id',       AttributeType: 'S' },
+        { AttributeName: 'username', AttributeType: 'S' },
+      ],
+      GlobalSecondaryIndexes: [{
+        IndexName: 'username-index',
+        KeySchema: [{ AttributeName: 'username', KeyType: 'HASH' }],
+        Projection: { ProjectionType: 'ALL' },
+      }],
     },
   ];
 

@@ -717,3 +717,27 @@ select.form-input { cursor: pointer; }
   .answer-btn       { min-height: 90px; font-size: 22px; }
   .question-text    { font-size: 30px; }
 }
+
+/* ===== LOGIN SCREEN ===== */
+.login-card { max-width: 400px; width: 100%; gap: 14px; }
+.login-logo { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; text-align: center; color: #fff; }
+.login-error { color: #ff6b6b; font-size: 13px; font-weight: 600; min-height: 18px; text-align: center; }
+#login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ===== TOPBAR RIGHT CLUSTER ===== */
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.topbar-user  { font-size: 13px; font-weight: 700; color: var(--muted); }
+
+/* ===== USERS PANEL ===== */
+.users-panel { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 24px; padding: 16px; }
+.users-section { background: var(--card-bg); border-radius: var(--radius); padding: 20px; }
+.users-section h3 { font-size: 16px; font-weight: 800; margin-bottom: 14px; }
+.user-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.user-row:last-child { border-bottom: none; }
+.user-name { flex: 1; font-weight: 600; font-size: 15px; }
+.user-name em { font-style: normal; color: var(--muted); font-size: 12px; }
+.user-role { font-size: 12px; color: var(--muted); background: rgba(255,255,255,.1);
+             padding: 2px 8px; border-radius: 10px; }

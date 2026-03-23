@@ -3,7 +3,8 @@
  * Safe to re-run: each game is identified by name; existing games are skipped.
  */
 const { v4: uuid } = require('uuid');
-const { db, T, PutCommand, ScanCommand } = require('./db');
+const bcrypt = require('bcryptjs');
+const { db, T, PutCommand, ScanCommand, QueryCommand } = require('./db');
 
 // ── Question banks ────────────────────────────────────────────────────────────
 
@@ -214,7 +215,38 @@ async function seedIfEmpty() {
   else console.log(`  Seeded ${created} new game(s).`);
 }
 
-module.exports = { seedIfEmpty };
+// ── Seed default admin ────────────────────────────────────────────────────────
+
+async function seedAdmin() {
+  const username = (process.env.ADMIN_USERNAME || 'admin').toLowerCase().trim();
+  const password = process.env.ADMIN_PASSWORD || 'changeme123';
+
+  const { Items } = await db.send(new QueryCommand({
+    TableName: T.USERS,
+    IndexName: 'username-index',
+    KeyConditionExpression: 'username = :u',
+    ExpressionAttributeValues: { ':u': username },
+  }));
+
+  if (Items && Items.length > 0) {
+    console.log(`  Admin user "${username}" already exists – skipping.`);
+    return;
+  }
+
+  await db.send(new PutCommand({
+    TableName: T.USERS,
+    Item: {
+      id: uuid(),
+      username,
+      role: 'admin',
+      passwordHash: await bcrypt.hash(password, 10),
+      createdAt: new Date().toISOString(),
+    },
+  }));
+  console.log(`  Created admin user "${username}".`);
+}
+
+module.exports = { seedIfEmpty, seedAdmin };
 
 // Allow running directly: node server/seed.js
 if (require.main === module) {
@@ -222,6 +254,7 @@ if (require.main === module) {
   (async () => {
     await initDB();
     await seedIfEmpty();
+    await seedAdmin();
     console.log('Done.');
     process.exit(0);
   })();

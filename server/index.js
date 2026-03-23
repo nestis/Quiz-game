@@ -10,8 +10,9 @@ const PORT = process.env.PORT || 3000;
   await initDB();
 
   if (process.env.SEED_ON_START === 'true') {
-    const { seedIfEmpty } = require('./seed');
+    const { seedIfEmpty, seedAdmin } = require('./seed');
     await seedIfEmpty();
+    await seedAdmin();
   }
 
   const app    = createApp();

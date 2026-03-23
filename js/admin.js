@@ -9,9 +9,38 @@ class Admin {
     this._questions = [];
   }
 
+  // ── LOGIN ────────────────────────────────────────────────────────────────
+  showLogin() {
+    showScreen('screen-login');
+    $('login-error').textContent = '';
+    $('login-username').value = '';
+    $('login-password').value = '';
+  }
+
+  async submitLogin() {
+    const username = $('login-username').value.trim();
+    const password = $('login-password').value;
+    $('login-error').textContent = '';
+    $('login-btn').disabled = true;
+    try {
+      await Auth.login(username, password);
+      this.showDashboard();
+    } catch (e) {
+      $('login-error').textContent = e.message || 'Login failed';
+    } finally {
+      $('login-btn').disabled = false;
+    }
+  }
+
   // ── DASHBOARD ────────────────────────────────────────────────────────────
   async showDashboard() {
-    game.showScreen('dashboard');
+    Auth.requireAuth(() => this._renderDashboard());
+  }
+
+  async _renderDashboard() {
+    showScreen('screen-dashboard');
+    const user = Auth.getUser();
+    $('admin-username-display').textContent = user ? user.username : '';
     $('games-grid').innerHTML = '<div class="loading">Loading games…</div>';
 
     const games = await API.getGames();
@@ -50,7 +79,7 @@ class Admin {
     $('editor-questions-section').classList.add('hidden');
     $('delete-game-btn').classList.add('hidden');
     $('game-status-select').value = 'draft';
-    game.showScreen('editor');
+    showScreen('screen-editor');
   }
 
   async saveGame() {
@@ -88,7 +117,7 @@ class Admin {
     $('game-status-select').value = g.status || 'draft';
     $('editor-questions-section').classList.remove('hidden');
     $('delete-game-btn').classList.remove('hidden');
-    game.showScreen('editor');
+    showScreen('screen-editor');
     await this.loadQuestions();
   }
 
@@ -170,7 +199,6 @@ class Admin {
       $('qm-ans1').value = $('qm-ans1').value || 'True';
       $('qm-ans2').value = $('qm-ans2').value || 'False';
     }
-    // Update correct answer options
     const sel = $('qm-correct');
     sel.innerHTML = isTF
       ? '<option value="0">Answer 1</option><option value="1">Answer 2</option>'
@@ -225,14 +253,14 @@ class Admin {
 
   // ── HISTORY ─────────────────────────────────────────────────────────────
   async showHistory() {
-    game.showScreen('history');
+    showScreen('screen-history');
     $('history-list').innerHTML = '<div class="loading">Loading…</div>';
     const sessions = await API.getSessions();
     this._renderHistory(sessions);
   }
 
   async showGameHistory(gameId) {
-    game.showScreen('history');
+    showScreen('screen-history');
     $('history-list').innerHTML = '<div class="loading">Loading…</div>';
     const sessions = await API.getSessionsByGame(gameId);
     this._renderHistory(sessions);
@@ -282,12 +310,81 @@ class Admin {
           ${sorted.map((p, i) => `
             <div class="history-player ${p.isAI ? '' : 'is-you'}">
               <span class="hist-rank">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i+1)}</span>
-              <span>${p.emoji} ${this._esc(p.name)}${p.isAI ? '' : ' (You)'}</span>
+              <span>${p.emoji} ${this._esc(p.name)}</span>
               <span class="hist-score">${(p.score || 0).toLocaleString()} pts</span>
             </div>
           `).join('')}
         </div>
       </div>`;
+  }
+
+  // ── USERS MANAGEMENT ─────────────────────────────────────────────────────
+  async showUsersPanel() {
+    showScreen('screen-users');
+    $('users-list').innerHTML = '<div class="loading">Loading…</div>';
+    $('new-admin-username').value = '';
+    $('new-admin-password').value = '';
+    $('users-error').textContent = '';
+    await this._renderUsers();
+  }
+
+  async _renderUsers() {
+    const users = await API.getAdminUsers();
+    const me = Auth.getUser();
+    if (!users || !users.length) {
+      $('users-list').innerHTML = '<div class="empty-state">No admin users found.</div>';
+      return;
+    }
+    $('users-list').innerHTML = users.map(u => `
+      <div class="user-row">
+        <span class="user-name">${this._esc(u.username)}${u.id === me?.id ? ' <em>(you)</em>' : ''}</span>
+        <span class="user-role">${u.role}</span>
+        ${u.id !== me?.id
+          ? `<button class="btn-sm btn-del" onclick="admin.deleteAdminUser('${u.id}','${this._esc(u.username)}')">Remove</button>`
+          : '<span class="btn-sm" style="opacity:0.4">—</span>'}
+      </div>
+    `).join('');
+  }
+
+  async addAdminUser() {
+    const username = $('new-admin-username').value.trim();
+    const password = $('new-admin-password').value;
+    $('users-error').textContent = '';
+    if (!username || !password) { $('users-error').textContent = 'Username and password required'; return; }
+    const result = await API.createAdminUser(username, password);
+    if (result && result.error) { $('users-error').textContent = result.error; return; }
+    $('new-admin-username').value = '';
+    $('new-admin-password').value = '';
+    await this._renderUsers();
+    this._showToast('Admin user created!');
+  }
+
+  async deleteAdminUser(id, username) {
+    if (!confirm(`Remove admin "${username}"?`)) return;
+    await API.deleteAdminUser(id);
+    await this._renderUsers();
+    this._showToast('User removed.');
+  }
+
+  showChangePassword() {
+    $('change-pw-modal').classList.remove('hidden');
+    $('cpw-current').value = '';
+    $('cpw-new').value = '';
+    $('cpw-error').textContent = '';
+  }
+
+  closeChangePassword() {
+    $('change-pw-modal').classList.add('hidden');
+  }
+
+  async submitChangePassword() {
+    const currentPassword = $('cpw-current').value;
+    const newPassword     = $('cpw-new').value;
+    $('cpw-error').textContent = '';
+    const result = await API.changePassword(currentPassword, newPassword);
+    if (result && result.error) { $('cpw-error').textContent = result.error; return; }
+    this.closeChangePassword();
+    this._showToast('Password updated!');
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────

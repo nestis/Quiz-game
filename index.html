@@ -25,12 +25,35 @@
       <p class="logo-tagline">Real-time multiplayer quiz!</p>
     </div>
     <div class="home-actions">
-      <button class="btn-primary pulse" onclick="game.showSelectScreen()">🎮 Host a Game</button>
+      <button class="btn-primary pulse" onclick="Auth.requireAuth(() => game.showSelectScreen())">🎮 Host a Game</button>
       <button class="btn-secondary" onclick="mp.goToJoin()">🌐 Join with PIN</button>
-      <button class="btn-secondary" onclick="admin.showDashboard()">🛠️ Manage Games</button>
+      <button class="btn-secondary" onclick="Auth.requireAuth(() => admin._renderDashboard())">🛠️ Manage Games</button>
       <button class="btn-secondary" onclick="admin.showHistory()">📊 History</button>
     </div>
     <button class="mute-btn" id="mute-btn" onclick="game.toggleMute()" title="Toggle music">🔊</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       LOGIN
+       ══════════════════════════════════════════════════════════════ -->
+  <div id="screen-login" class="screen">
+    <div class="card login-card">
+      <div class="login-logo">⚡ QuizBlitz Admin</div>
+      <h2>Sign In</h2>
+      <div class="form-group">
+        <label>Username</label>
+        <input id="login-username" class="form-input" placeholder="Username" autocomplete="username"
+               onkeydown="if(event.key==='Enter') document.getElementById('login-password').focus()" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="login-password" class="form-input" type="password" placeholder="Password" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter') admin.submitLogin()" />
+      </div>
+      <p id="login-error" class="login-error"></p>
+      <button id="login-btn" class="btn-primary" onclick="admin.submitLogin()">Sign In →</button>
+      <button class="btn-ghost" onclick="showScreen('home')">← Back</button>
+    </div>
   </div>
 
   <!-- ══════════════════════════════════════════════════════════════
@@ -214,9 +237,14 @@
        ══════════════════════════════════════════════════════════════ -->
   <div id="screen-dashboard" class="screen">
     <div class="admin-topbar">
-      <button class="btn-ghost" onclick="game.showScreen('home')">← Home</button>
+      <button class="btn-ghost" onclick="showScreen('home')">← Home</button>
       <h2>🛠️ Game Manager</h2>
-      <button class="btn-primary btn-sm" onclick="admin.showCreateForm()">+ New Game</button>
+      <div class="topbar-right">
+        <span class="topbar-user" id="admin-username-display"></span>
+        <button class="btn-sm btn-secondary" onclick="admin.showUsersPanel()">👥 Users</button>
+        <button class="btn-primary btn-sm" onclick="admin.showCreateForm()">+ New Game</button>
+        <button class="btn-sm btn-ghost" onclick="Auth.logout()">Sign Out</button>
+      </div>
     </div>
     <div class="games-grid" id="games-grid"></div>
   </div>
@@ -327,6 +355,65 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════════════
+       USERS MANAGEMENT
+       ══════════════════════════════════════════════════════════════ -->
+  <div id="screen-users" class="screen">
+    <div class="admin-topbar">
+      <button class="btn-ghost" onclick="admin._renderDashboard()">← Dashboard</button>
+      <h2>👥 Admin Users</h2>
+      <span></span>
+    </div>
+    <div class="users-panel">
+      <div class="users-section">
+        <h3>Current Admins</h3>
+        <div id="users-list"></div>
+      </div>
+      <div class="users-section">
+        <h3>Add Admin</h3>
+        <div class="form-group">
+          <label>Username</label>
+          <input id="new-admin-username" class="form-input" placeholder="Username" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label>Password (min 8 chars)</label>
+          <input id="new-admin-password" class="form-input" type="password" placeholder="Password" autocomplete="new-password" />
+        </div>
+        <p id="users-error" class="login-error"></p>
+        <button class="btn-primary btn-sm" onclick="admin.addAdminUser()">+ Add Admin</button>
+      </div>
+      <div class="users-section">
+        <h3>Change Your Password</h3>
+        <button class="btn-secondary btn-sm" onclick="admin.showChangePassword()">Change Password…</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change password modal -->
+  <div class="modal-overlay hidden" id="change-pw-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Change Password</h3>
+        <button class="btn-icon" onclick="admin.closeChangePassword()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Current Password</label>
+          <input id="cpw-current" class="form-input" type="password" autocomplete="current-password" />
+        </div>
+        <div class="form-group">
+          <label>New Password (min 8 chars)</label>
+          <input id="cpw-new" class="form-input" type="password" autocomplete="new-password" />
+        </div>
+        <p id="cpw-error" class="login-error"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="admin.closeChangePassword()">Cancel</button>
+        <button class="btn-primary btn-sm" onclick="admin.submitChangePassword()">Update Password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
        HISTORY
        ══════════════════════════════════════════════════════════════ -->
   <div id="screen-history" class="screen">
@@ -340,10 +427,19 @@
 
   <!-- Socket.io client (served automatically by the server) -->
   <script src="/socket.io/socket.io.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/admin.js"></script>
   <script src="js/multiplayer.js"></script>
   <script src="js/game.js"></script>
+  <script>
+    // Global helper so admin.js can call showScreen() before game is initialised
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById('screen-' + id);
+      if (el) el.classList.add('active');
+    }
+  </script>
 </body>
 </html>

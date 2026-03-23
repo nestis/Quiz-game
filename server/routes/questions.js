@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { v4: uuid } = require('uuid');
 const { db, T, PutCommand, GetCommand, QueryCommand, DeleteCommand, UpdateCommand } = require('../db');
+const { requireAdmin } = require('../middleware/auth');
 
 // Helper: update question count on the parent game
 async function refreshCount(gameId) {
@@ -31,7 +32,7 @@ router.get('/:gameId/questions', async (req, res, next) => {
 });
 
 // Add a question
-router.post('/:gameId/questions', async (req, res, next) => {
+router.post('/:gameId/questions', requireAdmin, async (req, res, next) => {
   try {
     const gameId = req.params.gameId;
     const { type, category, emoji, question, answers, correct, time } = req.body;
@@ -58,7 +59,7 @@ router.post('/:gameId/questions', async (req, res, next) => {
 });
 
 // Bulk-add questions (used by seed)
-router.post('/:gameId/questions/bulk', async (req, res, next) => {
+router.post('/:gameId/questions/bulk', requireAdmin, async (req, res, next) => {
   try {
     const gameId = req.params.gameId;
     const questions = req.body.questions || [];
@@ -86,7 +87,7 @@ router.post('/:gameId/questions/bulk', async (req, res, next) => {
 });
 
 // Update a question
-router.put('/:gameId/questions/:id', async (req, res, next) => {
+router.put('/:gameId/questions/:id', requireAdmin, async (req, res, next) => {
   try {
     const { type, category, emoji, question, answers, correct, time } = req.body;
     const updates = [];
@@ -116,7 +117,7 @@ router.put('/:gameId/questions/:id', async (req, res, next) => {
 });
 
 // Delete a question
-router.delete('/:gameId/questions/:id', async (req, res, next) => {
+router.delete('/:gameId/questions/:id', requireAdmin, async (req, res, next) => {
   try {
     await db.send(new DeleteCommand({
       TableName: T.QUESTIONS,

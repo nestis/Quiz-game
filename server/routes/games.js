@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { v4: uuid } = require('uuid');
 const { db, T, PutCommand, GetCommand, ScanCommand, DeleteCommand, UpdateCommand, QueryCommand } = require('../db');
+const { requireAdmin } = require('../middleware/auth');
 
 // List all games
 router.get('/', async (_req, res, next) => {
@@ -23,7 +24,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // Create game
-router.post('/', async (req, res, next) => {
+router.post('/', requireAdmin, async (req, res, next) => {
   try {
     const { name, description } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' });
@@ -44,7 +45,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // Update game
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', requireAdmin, async (req, res, next) => {
   try {
     const { name, description, status } = req.body;
     const updates = [];
@@ -69,7 +70,7 @@ router.put('/:id', async (req, res, next) => {
 });
 
 // Delete game (also deletes its questions)
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requireAdmin, async (req, res, next) => {
   try {
     const gameId = req.params.id;
     // Delete all questions for this game

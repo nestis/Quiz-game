@@ -16,5 +16,8 @@ services:
       - AWS_ACCESS_KEY_ID=local
       - AWS_SECRET_ACCESS_KEY=local
       - SEED_ON_START=true
+      - JWT_SECRET=local-dev-secret-change-in-prod
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=admin1234
     depends_on:
       - dynamodb-local

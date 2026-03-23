@@ -150,6 +150,21 @@ class Multiplayer {
     setTimeout(() => _$('join-pin')?.focus(), 120);
   }
 
+  // Pre-fill PIN from URL ?pin= parameter and open the join screen
+  checkUrlPin() {
+    const params = new URLSearchParams(window.location.search);
+    const pin = params.get('pin');
+    if (!pin) return;
+    // Strip the param from the URL without reloading
+    const clean = window.location.pathname + window.location.hash;
+    history.replaceState(null, '', clean);
+    // Open join screen with PIN pre-filled
+    this.goToJoin();
+    const el = _$('join-pin');
+    if (el) { el.value = pin.replace(/\s/g, ''); }
+    _$('join-name')?.focus();
+  }
+
   playerJoin() {
     const pin  = (_$('join-pin')?.value || '').replace(/\s/g, '');
     const name = (_$('join-name')?.value || '').trim();
@@ -172,6 +187,11 @@ class Multiplayer {
     _$('game-pin').textContent       = this.pin.replace(/(\d{3})(\d{3})/, '$1 $2');
     _$('lobby-game-name').textContent = this.gameName;
 
+    // Show the join link
+    const joinUrl = `${location.origin}${location.pathname}?pin=${this.pin}`;
+    const linkEl = _$('lobby-join-link');
+    if (linkEl) { linkEl.value = joinUrl; }
+
     // Start button visible only to admin
     const startBtn = _$('start-btn');
     startBtn.style.display = this.isAdmin ? '' : 'none';
@@ -181,6 +201,15 @@ class Multiplayer {
 
     this._renderLobbyPlayers();
     game.showScreen('lobby');
+  }
+
+  copyJoinLink() {
+    const linkEl = _$('lobby-join-link');
+    if (!linkEl) return;
+    linkEl.select();
+    navigator.clipboard?.writeText(linkEl.value).catch(() => document.execCommand('copy'));
+    const btn = _$('copy-link-btn');
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => { btn.textContent = '🔗 Copy link'; }, 2000); }
   }
 
   _renderLobbyPlayers() {

@@ -119,6 +119,11 @@
 
     <div class="lobby-players" id="lobby-players"></div>
 
+    <div class="lobby-join-link-row">
+      <input id="lobby-join-link" class="join-link-input" readonly aria-label="Join link" />
+      <button id="copy-link-btn" class="btn-sm btn-secondary" onclick="mp.copyJoinLink()">🔗 Copy link</button>
+    </div>
+
     <div class="lobby-footer">
       <div class="player-count" id="player-count">0 players joined</div>
       <!-- waiting message shown to non-admin -->
@@ -440,6 +445,8 @@
       const el = document.getElementById('screen-' + id);
       if (el) el.classList.add('active');
     }
+    // Handle ?pin= deep-link after all scripts have initialised
+    window.addEventListener('DOMContentLoaded', () => mp.checkUrlPin());
   </script>
 </body>
 </html>

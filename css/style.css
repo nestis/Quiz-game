@@ -741,3 +741,19 @@ select.form-input { cursor: pointer; }
 .user-name em { font-style: normal; color: var(--muted); font-size: 12px; }
 .user-role { font-size: 12px; color: var(--muted); background: rgba(255,255,255,.1);
              padding: 2px 8px; border-radius: 10px; }
+
+/* ===== LOBBY – join link row ===== */
+.lobby-join-link-row {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; max-width: 480px;
+  margin: 0 auto 12px;
+}
+.join-link-input {
+  flex: 1; min-width: 0;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 8px;
+  color: #fff; font-size: 13px; font-family: monospace;
+  padding: 8px 12px;
+  outline: none; cursor: text; user-select: all;
+}

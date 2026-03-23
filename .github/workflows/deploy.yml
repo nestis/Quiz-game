@@ -1,0 +1,60 @@
+name: Deploy QuizBlitz
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:          # allow manual trigger from GitHub UI
+
+env:
+  AWS_REGION: us-east-1       # change if you deploy to another region
+
+# Required for OIDC (keyless AWS auth – no stored access keys)
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: CDK Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Node.js ────────────────────────────────────────────────
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      # ── 3. AWS credentials via OIDC ───────────────────────────────
+      # No long-lived access keys – GitHub gets a short-lived token.
+      # See SETUP.md for how to create the IAM role.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ── 4. Install dependencies ───────────────────────────────────
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install CDK dependencies
+        run: npm ci
+        working-directory: infra
+
+      # ── 5. CDK Bootstrap (idempotent – safe to run every time) ────
+      - name: CDK Bootstrap
+        run: npx cdk bootstrap --ci --require-approval never
+        working-directory: infra
+
+      # ── 6. Deploy ─────────────────────────────────────────────────
+      # Docker is pre-installed on ubuntu-latest; CDK builds the image
+      # via DockerImageAsset and pushes it to ECR automatically.
+      - name: CDK Deploy
+        run: npx cdk deploy --all --ci --require-approval never
+        working-directory: infra

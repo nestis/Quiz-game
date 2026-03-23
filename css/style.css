@@ -757,3 +757,17 @@ select.form-input { cursor: pointer; }
   padding: 8px 12px;
   outline: none; cursor: text; user-select: all;
 }
+
+/* ===== JOIN SCREEN – PIN badge (shown when PIN comes from link) ===== */
+.join-pin-badge {
+  width: 100%;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.35);
+  border-radius: var(--radius);
+  text-align: center;
+  padding: 14px 20px;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #fff;
+}

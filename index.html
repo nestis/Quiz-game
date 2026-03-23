@@ -62,7 +62,10 @@
   <div id="screen-join" class="screen">
     <div class="card">
       <h2>Join a Game</h2>
-      <div class="form-group" style="width:100%">
+      <!-- Shown only when PIN comes from a link; hidden by default -->
+      <div id="join-pin-badge" class="join-pin-badge" style="display:none"></div>
+      <!-- Hidden when PIN comes from a link -->
+      <div id="join-pin-field" class="form-group" style="width:100%">
         <label>Game PIN</label>
         <input id="join-pin" class="name-input" placeholder="e.g. 847 293"
                maxlength="8" autocomplete="off" inputmode="numeric"
@@ -75,7 +78,7 @@
                onkeydown="if(event.key==='Enter') mp.playerJoin()" />
       </div>
       <button class="btn-primary" onclick="mp.playerJoin()">Join →</button>
-      <button class="btn-ghost"   onclick="game.showScreen('home')">← Back</button>
+      <button class="btn-ghost"   onclick="mp._resetJoinScreen()">← Back</button>
     </div>
   </div>
 

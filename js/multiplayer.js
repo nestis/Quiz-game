@@ -146,23 +146,51 @@ class Multiplayer {
   // ── Player join flow ────────────────────────────────────────────────────────
 
   goToJoin() {
+    // Always show the full form (hide badge, show PIN field)
+    const badge = _$('join-pin-badge');
+    const field = _$('join-pin-field');
+    if (badge) badge.style.display = 'none';
+    if (field) field.style.display = '';
     game.showScreen('join');
     setTimeout(() => _$('join-pin')?.focus(), 120);
   }
 
-  // Pre-fill PIN from URL ?pin= parameter and open the join screen
+  // Pre-fill PIN from URL ?pin= parameter and open the join screen.
+  // When the PIN comes from a link, collapse the PIN field into a display badge
+  // so players only need to enter their name.
   checkUrlPin() {
     const params = new URLSearchParams(window.location.search);
     const pin = params.get('pin');
     if (!pin) return;
     // Strip the param from the URL without reloading
-    const clean = window.location.pathname + window.location.hash;
-    history.replaceState(null, '', clean);
-    // Open join screen with PIN pre-filled
-    this.goToJoin();
-    const el = _$('join-pin');
-    if (el) { el.value = pin.replace(/\s/g, ''); }
-    _$('join-name')?.focus();
+    history.replaceState(null, '', window.location.pathname + window.location.hash);
+    this._openJoinWithPin(pin.replace(/\s/g, ''));
+  }
+
+  _openJoinWithPin(pin) {
+    // Show PIN as a prominent badge, hide the manual-entry field
+    const badge = _$('join-pin-badge');
+    const field = _$('join-pin-field');
+    if (badge) {
+      badge.textContent = `📌 PIN: ${pin.replace(/(\d{3})(\d{3})/, '$1 $2')}`;
+      badge.style.display = '';
+    }
+    if (field) field.style.display = 'none';
+    const pinEl = _$('join-pin');
+    if (pinEl) pinEl.value = pin;
+    game.showScreen('join');
+    setTimeout(() => _$('join-name')?.focus(), 120);
+  }
+
+  _resetJoinScreen() {
+    // Restore the full join form when navigating back
+    const badge = _$('join-pin-badge');
+    const field = _$('join-pin-field');
+    if (badge) badge.style.display = 'none';
+    if (field) field.style.display = '';
+    _$('join-pin').value  = '';
+    _$('join-name').value = '';
+    game.showScreen('home');
   }
 
   playerJoin() {

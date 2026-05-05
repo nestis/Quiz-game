@@ -1,117 +1,121 @@
-# Deploying QuizBlitz to AWS
+# QuizBlitz – Deployment Guide
 
-Deployments are automated via GitHub Actions on every push to `main`.
-No AWS access keys are stored in GitHub — authentication uses **OIDC** (short-lived tokens).
+## Architecture
+
+```
+Fly.io (Docker container)  →  AWS DynamoDB (5 tables)
+      ↑
+GitHub Actions (CI/CD)
+```
+
+- **App**: Fly.io – Docker container, WebSocket-capable, ~$3/mo (scales to zero when idle)
+- **Database**: AWS DynamoDB – pay-per-request, ~$0 for a quiz game
+- **CI/CD**: GitHub Actions – auto-deploys on push to `main`
 
 ---
 
-## One-time AWS setup
+## One-time setup
 
-Run these commands once in your AWS account (replace the placeholders).
+### 1 – AWS: DynamoDB IAM user
 
-### 1. Create the GitHub OIDC provider
+Create an IAM user with programmatic access and attach this inline policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem",
+      "dynamodb:DeleteItem", "dynamodb:Query", "dynamodb:Scan",
+      "dynamodb:BatchWriteItem"
+    ],
+    "Resource": "arn:aws:dynamodb:eu-west-1:*:table/QuizBlitz_*"
+  }]
+}
+```
+
+Save the **Access Key ID** and **Secret Access Key** – you will need them in step 3.
+
+### 2 – AWS: OIDC role for CDK (GitHub Actions → AWS)
+
+This lets GitHub Actions deploy the DynamoDB tables without stored keys.
 
 ```bash
+# Create the OIDC provider (once per AWS account)
 aws iam create-open-id-connect-provider \
   --url https://token.actions.githubusercontent.com \
-  --client-id-list sts.amazonaws.com \
-  --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
+  --client-id-list sts.amazonaws.com
 ```
 
-### 2. Create the IAM deploy role
+Create an IAM role with this trust policy (replace placeholders):
 
-Replace `YOUR_GITHUB_ORG` and `YOUR_REPO_NAME`:
-
-```bash
-aws iam create-role \
-  --role-name QuizBlitzDeploy \
-  --assume-role-policy-document '{
-    "Version": "2012-10-17",
-    "Statement": [{
-      "Effect": "Allow",
-      "Principal": { "Federated": "arn:aws:iam::'"$(aws sts get-caller-identity --query Account --output text)"':oidc-provider/token.actions.githubusercontent.com" },
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Condition": {
-        "StringLike": {
-          "token.actions.githubusercontent.com:sub": "repo:YOUR_GITHUB_ORG/YOUR_REPO_NAME:*"
-        },
-        "StringEquals": {
-          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-        }
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+    },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringLike": {
+        "token.actions.githubusercontent.com:sub": "repo:YOUR_ORG/YOUR_REPO:*"
       }
-    }]
-  }'
+    }
+  }]
+}
 ```
 
-### 3. Attach permissions to the role
+Attach **AdministratorAccess** (or a policy scoped to DynamoDB + CDK bootstrap resources).
 
-CDK needs permissions for CloudFormation, ECR, App Runner, DynamoDB, IAM, and S3 (bootstrap bucket).
-The quickest approach for a private project is `AdministratorAccess`; for tighter security use the policy below.
+### 3 – Fly.io: create the app
 
 ```bash
-# Quick (recommended for private/dev projects)
-aws iam attach-role-policy \
-  --role-name QuizBlitzDeploy \
-  --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+# Install flyctl
+brew install flyctl          # macOS
+# or: curl -L https://fly.io/install.sh | sh
+
+fly auth login
+
+# Edit fly.toml: set a unique app name, then register it
+fly launch --no-deploy
+
+# Set secrets (never stored in git)
+fly secrets set \
+  JWT_SECRET="$(openssl rand -hex 32)" \
+  ADMIN_USERNAME="admin" \
+  ADMIN_PASSWORD="your-secure-password" \
+  AWS_ACCESS_KEY_ID="AKIA..." \
+  AWS_SECRET_ACCESS_KEY="..."
 ```
 
-<details>
-<summary>Least-privilege policy (production)</summary>
+### 4 – GitHub secrets
 
-```bash
-aws iam put-role-policy \
-  --role-name QuizBlitzDeploy \
-  --policy-name QuizBlitzDeployPolicy \
-  --policy-document '{
-    "Version": "2012-10-17",
-    "Statement": [
-      { "Effect": "Allow", "Action": ["cloudformation:*"],   "Resource": "*" },
-      { "Effect": "Allow", "Action": ["ecr:*"],              "Resource": "*" },
-      { "Effect": "Allow", "Action": ["apprunner:*"],        "Resource": "*" },
-      { "Effect": "Allow", "Action": ["dynamodb:*"],         "Resource": "*" },
-      { "Effect": "Allow", "Action": ["iam:*"],              "Resource": "*" },
-      { "Effect": "Allow", "Action": ["s3:*"],               "Resource": "*" },
-      { "Effect": "Allow", "Action": ["ssm:GetParameter"],   "Resource": "*" }
-    ]
-  }'
-```
+Add these in **Settings → Secrets and variables → Actions**:
 
-</details>
-
-### 4. Copy the role ARN
-
-```bash
-aws iam get-role --role-name QuizBlitzDeploy --query Role.Arn --output text
-```
+| Secret | Value |
+|--------|-------|
+| `AWS_DEPLOY_ROLE_ARN` | ARN of the OIDC role from step 2 |
+| `FLY_API_TOKEN` | Output of `fly tokens create deploy` |
 
 ---
 
-## GitHub repository setup
+## Deploying
 
-1. Go to your repo → **Settings → Secrets and variables → Actions**
-2. Click **New repository secret**
-3. Name: `AWS_DEPLOY_ROLE_ARN`
-   Value: the ARN from step 4 above (`arn:aws:iam::123456789012:role/QuizBlitzDeploy`)
+### Automatic
+Push to `main` → GitHub Actions runs both jobs automatically:
+1. **CDK** – creates/updates DynamoDB tables
+2. **Fly** – builds and deploys the Docker container
 
----
+### Manual (first deploy or local CLI)
+```bash
+# Deploy DynamoDB tables
+cd infra && npx cdk deploy --all
 
-## Triggering a deploy
-
-| Trigger | How |
-|---------|-----|
-| **Automatic** | Push or merge to `main` |
-| **Manual** | GitHub → Actions → "Deploy QuizBlitz" → "Run workflow" |
-
-The workflow will:
-1. Install Node.js dependencies
-2. Authenticate to AWS via OIDC (no stored secrets)
-3. Run `cdk bootstrap` (safe to re-run, skips if already done)
-4. Build the Docker image and push it to ECR
-5. Deploy/update the App Runner service and DynamoDB tables
-
-The public URL is printed at the end of the CDK output:
-```
-QuizBlitzStack.QuizBlitzUrl = https://xxxxxxxxxxxx.us-east-1.awsapprunner.com
+# Deploy the app
+fly deploy
 ```
 
 ---
@@ -119,14 +123,17 @@ QuizBlitzStack.QuizBlitzUrl = https://xxxxxxxxxxxx.us-east-1.awsapprunner.com
 ## Local development
 
 ```bash
-docker compose up --build   # app on :3000, DynamoDB Local on :8000
+docker compose up --build
+# App:  http://localhost:3000
+# Login: admin / admin1234
 ```
 
-## Manual deploy (without GitHub Actions)
+---
 
-```bash
-cd infra
-npm ci
-npx cdk bootstrap   # first time only
-npx cdk deploy --all
-```
+## Cost estimate
+
+| Resource | Cost |
+|----------|------|
+| Fly.io shared-cpu-1x 256 MB (auto-stops when idle) | ~$0–3/mo |
+| AWS DynamoDB (pay-per-request, low traffic) | ~$0/mo |
+| **Total** | **~$0–3/mo** |

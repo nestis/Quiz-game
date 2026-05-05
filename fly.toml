@@ -1,0 +1,49 @@
+# fly.toml – Fly.io configuration for QuizBlitz
+# Rename the app below to something unique, then run:
+#   fly launch --no-deploy   (first time only, to register the app)
+#   fly deploy               (every subsequent deploy)
+
+app            = "quizblitz"
+primary_region = "lhr"          # closest to eu-west-1; change freely
+
+[build]
+  # Uses the existing Dockerfile – no changes needed
+
+[env]
+  PORT           = "3000"
+  SEED_ON_START  = "true"
+  AWS_REGION     = "eu-west-1"
+  # DynamoDB table names – must match what CDK created
+  GAMES_TABLE      = "QuizBlitz_Games"
+  QUESTIONS_TABLE  = "QuizBlitz_Questions"
+  SESSIONS_TABLE   = "QuizBlitz_Sessions"
+  PLAYERS_TABLE    = "QuizBlitz_Players"
+  USERS_TABLE      = "QuizBlitz_Users"
+  # Secrets are set separately via: fly secrets set KEY=value
+  # Required secrets: JWT_SECRET, ADMIN_PASSWORD,
+  #                   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+
+[http_service]
+  internal_port       = 3000
+  force_https         = true
+  auto_stop_machines  = "stop"   # scale to zero when idle – saves ~$3/mo
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # Keep WebSocket connections alive through the proxy
+  [http_service.concurrency]
+    type       = "connections"
+    soft_limit = 200
+    hard_limit = 250
+
+  [[http_service.checks]]
+    interval   = "15s"
+    timeout    = "5s"
+    grace_period = "10s"
+    method     = "GET"
+    path       = "/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus     = 1
+  memory   = "256mb"
